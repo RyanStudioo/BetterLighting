@@ -11,8 +11,7 @@ public final class BetterLighting extends JavaPlugin implements Listener {
 
     @Override
     public void onEnable() {
-        // Register the Torch listener
-        getServer().getPluginManager().registerEvents(new Torch(this), this);
+        getServer().getPluginManager().registerEvents(new AmbientLighting(this), this);
 
         getLogger().info("BetterLighting plugin enabled!");
     }

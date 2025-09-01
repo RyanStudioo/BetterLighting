@@ -15,12 +15,12 @@ import org.bukkit.inventory.ItemStack;
 
 import java.util.*;
 
-public class Torch implements Listener {
+public class AmbientLighting implements Listener {
     private final BetterLighting plugin;
     private final Map<UUID, Set<Block>> playerLightBlocks = new HashMap<>();
     private final Map<UUID, Map<Block, Material>> originalBlocks = new HashMap<>();
 
-    public Torch(BetterLighting plugin) {
+    public AmbientLighting(BetterLighting plugin) {
         this.plugin = plugin;
     }
 
