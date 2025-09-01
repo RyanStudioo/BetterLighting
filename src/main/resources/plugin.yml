@@ -1,0 +1,4 @@
+name: BetterLighting
+version: '0.0.1'
+main: io.github.ryanstudioo.betterLighting.BetterLighting
+api-version: '1.21'
