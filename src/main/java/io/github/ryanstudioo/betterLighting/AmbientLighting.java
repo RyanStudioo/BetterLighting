@@ -4,6 +4,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
+import org.bukkit.block.data.Levelled;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -18,7 +19,8 @@ import java.util.*;
 public class AmbientLighting implements Listener {
     private final BetterLighting plugin;
     private final Map<UUID, Set<Block>> playerLightBlocks = new HashMap<>();
-    private final Map<UUID, Map<Block, Material>> originalBlocks = new HashMap<>();
+    private final Map<UUID, Map<Block, org.bukkit.block.data.BlockData>> originalBlocks = new HashMap<>();
+
 
     public AmbientLighting(BetterLighting plugin) {
         this.plugin = plugin;
@@ -34,25 +36,29 @@ public class AmbientLighting implements Listener {
         ItemStack mainItem = player.getInventory().getItemInMainHand();
         ItemStack offItem = player.getInventory().getItemInOffHand();
         Location position = player.getLocation().add(0,1,0);
+        Location foot = position.clone().add(0,-1,0);
+        Location up = position.clone().add(0,1,0);
         Block block = position.getBlock();
-        if ((isLightSource(mainItem) || isLightSource(offItem)) && block.isPassable()) {
-            placeLights(block, player.getUniqueId());
+        if (!block.getType().isAir()){
+            block = foot.getBlock();
+            if (!block.getType().isAir()){
+                block = up.getBlock();
+            }
         }
-        if ((isLightSource(mainItem) || isLightSource(offItem))) {
-            block.isPassable();
+        if ((isLightSource(mainItem) || isLightSource(offItem)) && block.getType().isAir()) {
+            placeLights(block, player.getUniqueId());
         }
     }
 
     private void placeLights(Block block, UUID playerId){
-        Map<Block, Material> originalBlockTypes = new HashMap<>();
-        originalBlockTypes.put(block, block.getType());
+        Map<Block, org.bukkit.block.data.BlockData> originalBlockData = originalBlocks.computeIfAbsent(playerId, k -> new HashMap<>());
+        originalBlockData.putIfAbsent(block, block.getBlockData());
 
         block.setType(Material.LIGHT);
-
         Set<Block> lightBlocks = playerLightBlocks.computeIfAbsent(playerId, k -> new HashSet<>());
         lightBlocks.add(block);
-        originalBlocks.put(playerId, originalBlockTypes);
     }
+
 
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent event) {
@@ -88,13 +94,12 @@ public class AmbientLighting implements Listener {
     private void removePlayerLights(UUID playerId) {
         Set<Block> lightBlocks = playerLightBlocks.get(playerId);
         if (lightBlocks != null) {
-            Map<Block, Material> originalBlockTypes = originalBlocks.get(playerId);
+            Map<Block, org.bukkit.block.data.BlockData> originalBlockData = originalBlocks.get(playerId);
             for (Block block : lightBlocks) {
-
-                Material originalType = originalBlockTypes.get(block);
                 if (block.getType() == Material.LIGHT) {
-                    if (originalType != null) {
-                        block.setType(originalType);
+                    org.bukkit.block.data.BlockData data = (originalBlockData != null) ? originalBlockData.get(block) : null;
+                    if (data != null) {
+                        block.setBlockData(data);
                     } else {
                         block.setType(Material.AIR);
                     }
